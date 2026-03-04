@@ -1,10 +1,10 @@
 const FACE_ORDER = ["U", "R", "F", "D", "L", "B"];
 const FACE_LABEL = {
-  U: "U (Tren)",
-  R: "R (Phai)",
-  F: "F (Truoc)",
-  D: "D (Duoi)",
-  L: "L (Trai)",
+  U: "U (Trên)",
+  R: "R (Phải)",
+  F: "F (Trước)",
+  D: "D (Dưới)",
+  L: "L (Trái)",
   B: "B (Sau)",
 };
 const STICKER_COLORS = {
@@ -83,10 +83,10 @@ async function startCamera() {
     cameraEl.srcObject = mediaStream;
     streamRef = mediaStream;
     captureBtn.disabled = false;
-    captureStatus.textContent = "Camera dang chay. Chup mat hien tai trong khung.";
+    captureStatus.textContent = "Camera đang chạy. Chụp mặt hiện tại trong khung.";
   } catch (error) {
     captureStatus.textContent =
-      "Khong mo duoc camera. Hay cap quyen camera trong trinh duyet.";
+      "Không mở được camera. Hãy cấp quyền camera trong trình duyệt.";
   }
 }
 
@@ -112,20 +112,21 @@ function resetCaptures() {
 
 function updateCaptureStatus() {
   if (currentFaceIndex >= FACE_ORDER.length) {
-    captureStatus.textContent = "Da chup du 6 mat. Ban co the bam Giai.";
+    captureStatus.textContent = "Đã chụp đủ 6 mặt. Bạn có thể bấm Giải.";
     return;
   }
   const face = FACE_ORDER[currentFaceIndex];
-  captureStatus.textContent = `Mat hien tai: ${FACE_LABEL[face]} (${currentFaceIndex + 1}/6)`;
+  captureStatus.textContent = `Mặt hiện tại: ${FACE_LABEL[face]} (${currentFaceIndex + 1}/6)`;
 }
 
 function captureCurrentFace() {
   if (!streamRef || cameraEl.videoWidth === 0 || cameraEl.videoHeight === 0) {
-    captureStatus.textContent = "Can bat camera truoc khi chup.";
+    captureStatus.textContent = "Cần bật camera trước khi chụp.";
     return;
   }
   if (currentFaceIndex >= FACE_ORDER.length) {
-    captureStatus.textContent = "Da du 6 mat. Neu muon chup lai, bam Chup lai tu dau.";
+    captureStatus.textContent =
+      "Đã đủ 6 mặt. Nếu muốn chụp lại, bấm Chụp lại từ đầu.";
     return;
   }
 
@@ -270,13 +271,13 @@ function renderClassifiedPreview() {
 
 function formatRotations(rotations) {
   if (!rotations) return "";
-  const parts = FACE_ORDER.map((face) => `${face}:${rotations[face] || 0}x90`);
+  const parts = FACE_ORDER.map((face) => `${face}:${rotations[face] || 0}x90°`);
   return parts.join(" | ");
 }
 
 async function solveFromCapture() {
   if (Object.keys(classifiedFacelets).length < 6) {
-    captureStatus.textContent = "Can chup du 6 mat truoc khi giai.";
+    captureStatus.textContent = "Cần chụp đủ 6 mặt trước khi giải.";
     return;
   }
 
@@ -291,9 +292,20 @@ async function solveFromStateText() {
   await solveCube({ state });
 }
 
+async function readJsonSafely(response) {
+  const rawText = await response.text();
+  if (!rawText) return null;
+
+  try {
+    return JSON.parse(rawText);
+  } catch (_error) {
+    return null;
+  }
+}
+
 async function solveCube(payload) {
   resultSection.classList.remove("hidden");
-  resultSummary.textContent = "Dang tinh toan loi giai...";
+  resultSummary.textContent = "Đang tính toán lời giải...";
   rotationHint.textContent = "";
   stepList.innerHTML = "";
 
@@ -303,9 +315,23 @@ async function solveCube(payload) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    const data = await response.json();
+    const data = await readJsonSafely(response);
+
     if (!response.ok) {
-      throw new Error(data.error || "Khong giai duoc trang thai nay.");
+      const serverError =
+        data && typeof data.error === "string" ? data.error : "";
+      if (serverError) {
+        throw new Error(serverError);
+      }
+      throw new Error(
+        `Máy chủ phản hồi lỗi (HTTP ${response.status}) nhưng không có nội dung JSON hợp lệ.`
+      );
+    }
+
+    if (!data || typeof data !== "object") {
+      throw new Error(
+        "Máy chủ trả về dữ liệu không hợp lệ. Vui lòng kiểm tra lại API phía máy chủ."
+      );
     }
 
     renderResult(data);
@@ -313,27 +339,29 @@ async function solveCube(payload) {
       stateInput.value = data.state;
     }
   } catch (error) {
-    resultSummary.textContent = `Loi: ${error.message}`;
+    const errorMessage =
+      error instanceof Error ? error.message : "Đã xảy ra lỗi không xác định.";
+    resultSummary.textContent = `Lỗi: ${errorMessage}`;
   }
 }
 
 function renderResult(data) {
   const moveCount = Number.isFinite(data.moveCount) ? data.moveCount : 0;
   if (!data.solution || data.solution.trim() === "") {
-    resultSummary.textContent = "Khoi da o trang thai giai xong.";
+    resultSummary.textContent = "Khối đã ở trạng thái giải xong.";
   } else {
-    resultSummary.textContent = `So buoc: ${moveCount} | Chuoi loi giai: ${data.solution}`;
+    resultSummary.textContent = `Số bước: ${moveCount} | Chuỗi lời giải: ${data.solution}`;
   }
 
   if (data.rotations) {
-    rotationHint.textContent = `Xoay can chinh mat (tu camera): ${formatRotations(data.rotations)}`;
+    rotationHint.textContent = `Xoay căn chỉnh mặt (từ camera): ${formatRotations(data.rotations)}`;
   }
 
   stepList.innerHTML = "";
   const steps = Array.isArray(data.steps) ? data.steps : [];
   if (!steps.length) {
     const item = document.createElement("li");
-    item.textContent = "Khong can them thao tac.";
+    item.textContent = "Không cần thêm thao tác.";
     stepList.appendChild(item);
     return;
   }
@@ -368,7 +396,10 @@ function toggleMode() {
 async function loadCuboidGuide() {
   try {
     const response = await fetch("/api/cuboid-guide");
-    const data = await response.json();
+    const data = await readJsonSafely(response);
+    if (!response.ok || !data) {
+      throw new Error("Không tải được dữ liệu hướng dẫn.");
+    }
     cuboidNote.textContent = data.note || "";
     cuboidSteps.innerHTML = "";
     cuboidAlgs.innerHTML = "";
@@ -385,6 +416,6 @@ async function loadCuboidGuide() {
       cuboidAlgs.appendChild(li);
     }
   } catch (_error) {
-    cuboidNote.textContent = "Khong tai duoc huong dan cuboid.";
+    cuboidNote.textContent = "Không tải được hướng dẫn Rubik khối chữ nhật.";
   }
 }

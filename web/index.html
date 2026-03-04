@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Rubik Vision Solver</title>
+    <title>Trình giải Rubik bằng camera</title>
     <link
       rel="preconnect"
       href="https://fonts.googleapis.com"
@@ -22,60 +22,60 @@
   <body>
     <main class="app-shell">
       <section class="hero">
-        <p class="eyebrow">Rubik Camera + Solver</p>
-        <h1>Chup 6 Mat, Giai Tu Dong, Xem Tung Buoc</h1>
+        <p class="eyebrow">Camera Rubik + Trình giải</p>
+        <h1>Chụp 6 Mặt, Giải Tự Động, Xem Từng Bước</h1>
         <p>
-          Che do mac dinh giai Rubik 3x3 tu camera. Ban co them mot tab huong
-          dan rieng cho Rubik khoi chu nhat (cuboid).
+          Chế độ mặc định giải Rubik 3x3 từ camera. Bạn có thêm một tab hướng
+          dẫn riêng cho Rubik khối chữ nhật.
         </p>
         <div class="mode-line">
-          <label for="puzzleMode">Che do:</label>
+          <label for="puzzleMode">Chế độ:</label>
           <select id="puzzleMode">
-            <option value="3x3">Rubik 3x3 (camera + auto solve)</option>
-            <option value="cuboid">Rubik khoi chu nhat (huong dan)</option>
+            <option value="3x3">Rubik 3x3 (camera + giải tự động)</option>
+            <option value="cuboid">Rubik khối chữ nhật (hướng dẫn)</option>
           </select>
         </div>
       </section>
 
       <section id="solverSection" class="panel-grid">
         <article class="panel camera-panel">
-          <h2>1) Chup 6 mat</h2>
+          <h2>1) Chụp 6 mặt</h2>
           <p class="muted">
-            Thu tu: U, R, F, D, L, B. Dat mat can chup vao khung luoi 3x3 o
-            giua video.
+            Thứ tự: U, R, F, D, L, B. Đặt mặt cần chụp vào khung lưới 3x3 ở
+            giữa video.
           </p>
           <div class="video-wrap">
             <video id="camera" autoplay playsinline muted></video>
             <div class="grid-overlay" aria-hidden="true"></div>
           </div>
           <canvas id="frameCanvas" class="hidden"></canvas>
-          <p id="captureStatus" class="status">San sang bat dau.</p>
+          <p id="captureStatus" class="status">Sẵn sàng bắt đầu.</p>
           <div class="button-row">
             <button id="startCameraBtn" class="btn btn-primary">
-              Bat camera
+              Bật camera
             </button>
-            <button id="captureBtn" class="btn" disabled>Chup mat hien tai</button>
-            <button id="resetBtn" class="btn btn-ghost">Chup lai tu dau</button>
+            <button id="captureBtn" class="btn" disabled>Chụp mặt hiện tại</button>
+            <button id="resetBtn" class="btn btn-ghost">Chụp lại từ đầu</button>
           </div>
           <div class="button-row">
             <button id="solveFromCaptureBtn" class="btn btn-accent" disabled>
-              Giai tu 6 mat da chup
+              Giải từ 6 mặt đã chụp
             </button>
           </div>
         </article>
 
         <article class="panel faces-panel">
-          <h2>2) Kiem tra mat da nhan dien</h2>
+          <h2>2) Kiểm tra mặt đã nhận diện</h2>
           <p class="muted">
-            Neu sai mau do anh sang, ban co the sua chuoi trang thai o buoc 3.
+            Nếu sai màu do ánh sáng, bạn có thể sửa chuỗi trạng thái ở bước 3.
           </p>
           <div id="faceCards" class="face-cards"></div>
         </article>
 
         <article class="panel state-panel">
-          <h2>3) Giai bang chuoi trang thai (tuy chon)</h2>
+          <h2>3) Giải bằng chuỗi trạng thái (tùy chọn)</h2>
           <p class="muted">
-            Chuoi 54 ky tu theo thu tu U, R, F, D, L, B (moi mat 9 o).
+            Chuỗi 54 ký tự theo thứ tự U, R, F, D, L, B (mỗi mặt 9 ô).
           </p>
           <textarea
             id="stateInput"
@@ -84,32 +84,32 @@
           ></textarea>
           <div class="button-row">
             <button id="solveFromStateBtn" class="btn btn-accent">
-              Giai tu chuoi
+              Giải từ chuỗi
             </button>
           </div>
           <p class="muted small">
-            Meo: ban co the dung ket qua tu camera roi sua nhanh ky tu sai.
+            Mẹo: bạn có thể dùng kết quả từ camera rồi sửa nhanh ký tự sai.
           </p>
         </article>
       </section>
 
       <section id="cuboidSection" class="panel hidden">
-        <h2>Huong dan Rubik khoi chu nhat</h2>
+        <h2>Hướng dẫn Rubik khối chữ nhật</h2>
         <p id="cuboidNote" class="muted"></p>
         <div class="guide-grid">
           <div>
-            <h3>Quy trinh</h3>
+            <h3>Quy trình</h3>
             <ol id="cuboidSteps"></ol>
           </div>
           <div>
-            <h3>Mau cong thuc</h3>
+            <h3>Mẫu công thức</h3>
             <ul id="cuboidAlgs"></ul>
           </div>
         </div>
       </section>
 
       <section id="resultSection" class="panel hidden">
-        <h2>Loi giai</h2>
+        <h2>Lời giải</h2>
         <p id="resultSummary" class="summary"></p>
         <p id="rotationHint" class="muted small"></p>
         <ol id="stepList" class="step-list"></ol>
